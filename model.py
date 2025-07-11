@@ -10,7 +10,7 @@ sys.path.append(FILE_DIR)
 import torch
 import torch.nn as nn
 import numpy as np
-import backbone2
+import pointnet2
 import torch.nn.functional as F
 from diffusers.schedulers.scheduling_ddim import DDIMScheduler
 from typing import Union, Dict, Tuple, Optional
