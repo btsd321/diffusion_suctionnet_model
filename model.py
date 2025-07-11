@@ -205,7 +205,7 @@ class dsnet(nn.Module):
             'radius_per_layer': [[10, 20, 30], [30, 45, 60], [60, 80, 120], [120, 160, 240]],
             'input_feature_dims':3,
         }
-        self.backbone = backbone2.Pointnet2MSGBackbone(**backbone_config)
+        self.backbone = pointnet2.Pointnet2MSGBackbone(**backbone_config)
         backbone_feature_dim = 128
         
         # add diffusion
