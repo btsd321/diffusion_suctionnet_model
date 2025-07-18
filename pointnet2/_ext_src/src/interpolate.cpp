@@ -36,7 +36,7 @@ std::vector<at::Tensor> three_nn(at::Tensor unknowns, at::Tensor knows) {
   CHECK_IS_FLOAT(knows);
 
   // 如果unknowns在CUDA上, 则knows也必须在CUDA上
-  if (unknowns.type().is_cuda()) {
+  if (IS_CUDA_TENSOR(unknowns)) {
     CHECK_CUDA(knows);
   }
 
@@ -49,10 +49,10 @@ std::vector<at::Tensor> three_nn(at::Tensor unknowns, at::Tensor knows) {
                    at::device(unknowns.device()).dtype(at::ScalarType::Float));
 
   // 调用CUDA核函数进行三近邻查找
-  if (unknowns.type().is_cuda()) {
+  if (IS_CUDA_TENSOR(unknowns)) {
     three_nn_kernel_wrapper(unknowns.size(0), unknowns.size(1), knows.size(1),
-                            unknowns.data<float>(), knows.data<float>(),
-                            dist2.data<float>(), idx.data<int>());
+                            TENSOR_DATA_PTR(unknowns, float), TENSOR_DATA_PTR(knows, float),
+                            TENSOR_DATA_PTR(dist2, float), TENSOR_DATA_PTR(idx, int));
   } else {
     // 仅支持CUDA实现, CPU暂不支持
     AT_CHECK(false, "CPU not supported");
@@ -84,7 +84,7 @@ at::Tensor three_interpolate(at::Tensor points, at::Tensor idx,
   CHECK_IS_FLOAT(weight);
 
   // 如果points在CUDA上, 则idx和weight也必须在CUDA上
-  if (points.type().is_cuda()) {
+  if (IS_CUDA_TENSOR(points)) {
     CHECK_CUDA(idx);
     CHECK_CUDA(weight);
   }
@@ -95,11 +95,11 @@ at::Tensor three_interpolate(at::Tensor points, at::Tensor idx,
                    at::device(points.device()).dtype(at::ScalarType::Float));
 
   // 调用CUDA核函数进行三线性插值
-  if (points.type().is_cuda()) {
+  if (IS_CUDA_TENSOR(points)) {
     three_interpolate_kernel_wrapper(
         points.size(0), points.size(1), points.size(2), idx.size(1),
-        points.data<float>(), idx.data<int>(), weight.data<float>(),
-        output.data<float>());
+        TENSOR_DATA_PTR(points, float), TENSOR_DATA_PTR(idx, int), TENSOR_DATA_PTR(weight, float),
+        TENSOR_DATA_PTR(output, float));
   } else {
     // 仅支持CUDA实现, CPU暂不支持
     AT_CHECK(false, "CPU not supported");
@@ -132,7 +132,7 @@ at::Tensor three_interpolate_grad(at::Tensor grad_out, at::Tensor idx,
   CHECK_IS_FLOAT(weight);
 
   // 如果grad_out在CUDA上, 则idx和weight也必须在CUDA上
-  if (grad_out.type().is_cuda()) {
+  if (IS_CUDA_TENSOR(grad_out)) {
     CHECK_CUDA(idx);
     CHECK_CUDA(weight);
   }
@@ -143,11 +143,11 @@ at::Tensor three_interpolate_grad(at::Tensor grad_out, at::Tensor idx,
                    at::device(grad_out.device()).dtype(at::ScalarType::Float));
 
   // 调用CUDA核函数进行三线性插值的反向传播
-  if (grad_out.type().is_cuda()) {
+  if (IS_CUDA_TENSOR(grad_out)) {
     three_interpolate_grad_kernel_wrapper(
         grad_out.size(0), grad_out.size(1), grad_out.size(2), m,
-        grad_out.data<float>(), idx.data<int>(), weight.data<float>(),
-        output.data<float>());
+        TENSOR_DATA_PTR(grad_out, float), TENSOR_DATA_PTR(idx, int), TENSOR_DATA_PTR(weight, float),
+        TENSOR_DATA_PTR(output, float));
   } else {
     // 仅支持CUDA实现, CPU暂不支持
     AT_CHECK(false, "CPU not supported");

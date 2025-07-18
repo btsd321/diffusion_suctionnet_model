@@ -7,6 +7,18 @@
 #include <ATen/cuda/CUDAContext.h>
 #include <torch/extension.h>
 
+// PyTorch版本兼容性检查
+#if defined(TORCH_VERSION_MAJOR) && defined(TORCH_VERSION_MINOR)
+  #if TORCH_VERSION_MAJOR > 1 || (TORCH_VERSION_MAJOR == 1 && TORCH_VERSION_MINOR >= 5)
+    #define AT_CHECK TORCH_CHECK
+  #endif
+#else
+  // 如果无法检测到版本，尝试使用TORCH_CHECK
+  #ifndef AT_CHECK
+    #define AT_CHECK TORCH_CHECK
+  #endif
+#endif
+
 /*
  * @brief 检查输入张量是否为CUDA张量的宏
  * 
@@ -17,7 +29,7 @@
  */
 #define CHECK_CUDA(x)                                          \
   do {                                                         \
-    AT_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor"); \
+    AT_CHECK(x.device().is_cuda(), #x " must be a CUDA tensor"); \
   } while (0)
 
 /*
@@ -59,4 +71,34 @@
   do {                                                 \
     AT_CHECK(x.scalar_type() == at::ScalarType::Float, \
              #x " must be a float tensor");            \
-  }
+  } while (0)
+
+/*
+ * @brief PyTorch版本兼容性宏定义
+ * 
+ * 用于处理不同PyTorch版本之间的API差异
+ */
+
+// 检查张量是否在CUDA设备上的兼容性宏
+#if defined(TORCH_VERSION_MAJOR) && defined(TORCH_VERSION_MINOR)
+  #if TORCH_VERSION_MAJOR > 1 || (TORCH_VERSION_MAJOR == 1 && TORCH_VERSION_MINOR >= 5)
+    #define IS_CUDA_TENSOR(x) (x.device().is_cuda())
+  #else
+    #define IS_CUDA_TENSOR(x) (x.type().is_cuda())
+  #endif
+#else
+  // 默认使用新版本API，如果编译失败则需要手动切换
+  #define IS_CUDA_TENSOR(x) (x.device().is_cuda())
+#endif
+
+// 获取张量数据指针的兼容性宏
+#if defined(TORCH_VERSION_MAJOR) && defined(TORCH_VERSION_MINOR)
+  #if TORCH_VERSION_MAJOR > 1 || (TORCH_VERSION_MAJOR == 1 && TORCH_VERSION_MINOR >= 5)
+    #define TENSOR_DATA_PTR(x, type) (x.data_ptr<type>())
+  #else
+    #define TENSOR_DATA_PTR(x, type) (x.data<type>())
+  #endif
+#else
+  // 默认使用新版本API，如果编译失败则需要手动切换
+  #define TENSOR_DATA_PTR(x, type) (x.data_ptr<type>())
+#endif
