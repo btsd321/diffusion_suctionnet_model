@@ -2,6 +2,8 @@
 Training and utility helpers for SuctionNet.
 """
 
+import warnings
+
 try:
     from .train_helper import *
     __all__ = ['BNMomentumScheduler', 'OptimizerLRScheduler', 'SimpleLogger']

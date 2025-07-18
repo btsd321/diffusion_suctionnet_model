@@ -6,6 +6,7 @@ A PyTorch implementation for 6DoF suction grasping using diffusion models.
 
 import os
 import sys
+import warnings
 
 # 添加当前目录到 Python 路径
 __file_dir__ = os.path.dirname(os.path.abspath(__file__))
