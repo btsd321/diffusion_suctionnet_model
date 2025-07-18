@@ -4,15 +4,21 @@ dsnet的Pytorch实现版本。
 """
 import os
 import sys
-FILE_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(FILE_DIR)
 
 import torch
 import torch.nn as nn
 import numpy as np
-import pointnet2
 import torch.nn.functional as F
-from diffusers.schedulers.scheduling_ddim import DDIMScheduler
+from typing import Union, Dict, Tuple, Optional
+
+# 使用相对导入来导入包内模块
+try:
+    from . import pointnet2
+    from .diffusers.schedulers.scheduling_ddim import DDIMScheduler
+except ImportError:
+    # 如果相对导入失败，回退到绝对导入（用于调试）
+    import pointnet2
+    from diffusers.schedulers.scheduling_ddim import DDIMScheduler
 from typing import Union, Dict, Tuple, Optional
 
 class SpatialAttention(nn.Module):
