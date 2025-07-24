@@ -195,25 +195,32 @@ class dsnet(nn.Module):
     dsnet主网络类, 集成了点云特征提取、扩散模型、损失计算等功能。
     支持训练和推理两种模式。
     """
-    def __init__(self, use_vis_branch, return_loss):
+    def __init__(self, use_vis_branch, return_loss, pointnet_type: str = "cuda"):
         super().__init__()
         self.use_vis_branch = use_vis_branch
         self.loss_weights =  {
-                                'suction_seal_scores_head': 50.0, 
-                                'suction_wrench_scores_head': 50.0,
-                                'suction_feasibility_scores_head': 50.0,
-                                'individual_object_size_lable_head': 50.0,
-                                }
+            'suction_seal_scores_head': 50.0, 
+            'suction_wrench_scores_head': 50.0,
+            'suction_feasibility_scores_head': 50.0,
+            'individual_object_size_lable_head': 50.0,
+        }
         self.return_loss = return_loss
-        
+        self.pointnet_type = pointnet_type
+
         backbone_config = {
             'npoint_per_layer': [4096,1024,256,64],
             'radius_per_layer': [[10, 20, 30], [30, 45, 60], [60, 80, 120], [120, 160, 240]],
             'input_feature_dims':3,
         }
-        self.backbone = pointnet2.Pointnet2MSGBackbone(**backbone_config)
+        if self.pointnet_type == "cuda":
+            self.backbone = pointnet2.Pointnet2MSGBackbone(**backbone_config)
+        elif self.pointnet_type == "pt":
+            from pt_pointnet2.pointnet2_backbone import Pointnet2MSGBackbone as PTPointnet2MSGBackbone
+            self.backbone = PTPointnet2MSGBackbone(**backbone_config)
+        else:
+            raise ValueError(f"Unknown pointnet_type: {self.pointnet_type}, must be 'cuda' or 'pt'")
         backbone_feature_dim = 128
-        
+
         # add diffusion
         self.model = ScheduledCNNRefine(channels_in=backbone_feature_dim, channels_noise=4 )
         self.diffusion_inference_steps = 20
